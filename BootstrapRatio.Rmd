@@ -1,0 +1,182 @@
+---
+title: "Bootstrapping a Ratio Statistic"
+author: "Solon Karapanagiotis"
+date: "6 August 2016"
+output:
+  pdf_document: default
+  html_document:
+    highlight: haddock
+subtitle: using the boot package in R
+bibliography: bootRatio.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**The [`boot`](https://cran.r-project.org/web/packages/boot/boot.pdf) package needs to be installed and loaded.**
+
+```{r}
+library(boot)
+```
+
+We consider the population of the most populated cities in US in 1920 and 1930. The dataset contains n=49 data pairs, each corresponding to a US city, the pair being the populations of the city (in 1000's), which we denote by u and x. 
+
+```{r}
+str(bigcity)
+```
+
+* `u` is the 1920 population.
+* `x` is the 1930 population.
+
+A possible research question is if there is a difference in the population from 1920 to 1930. The scatter plot suggests this is true since the majority of the points lie away from the 45 degree line.
+
+```{r}
+plot(bigcity$u, bigcity$x, xlab="1920 population", ylab="1930 population", main="Population (in 1000's) year 1930 vs 1920") 
+abline(0,1)
+```
+
+In order to answer the research question we use the ratio of expectations
+
+$$\theta=\frac{E(X)}{E(U)}$$
+
+This ratio is the parameter of interest. And the hypotheses are 
+$$H_0:\theta=1, $$
+$$H_a:\theta\neq1$$
+
+$H_0$ corresponds to no difference in the population between 1920 and 1930. A natural (but biased) estimator of $\theta$ is 
+$$\widehat{\theta}=\frac{\bar{x}}{\bar{u}}$$ with 
+$\bar{x}=\sum\limits_{b=1}^{49}\frac{x_b}{n}$ and $\bar{u}=\sum\limits_{b=1}^{49}\frac{u_b}{n}.$
+
+The observed value is $\widehat{\theta}=1.239$, indicating higher population the year 1930, on average.
+
+```{r}
+(theta_hat <- mean(bigcity$x)/mean(bigcity$u))
+```
+
+I will use the bootstrap method to formally test the null hypothesis above. In order to proceed with the sampling under $H_0$ I define $K=\frac{X}{U}$ and $\widetilde{K}=K-0.239$. Under $H_0: E(\widetilde{K})=1$ (using the first order approximation $E(K)=\frac{E(X)}{E(U)}$).
+
+I want to estimate $\theta$ without assuming any parametric model for $X$ and $U$. Thus, I perform non-parametric bootstrap,
+
+```{r}
+stat <- function(data, indices){
+  
+  d <- data[indices, ]
+  k <- (mean(d$x)/mean(d$u)) - 0.239 
+  
+  return(k)
+}
+
+set.seed(1235) # seed for the RNG to ensure that you get exactly the same results as here
+boot_p <- boot(data=bigcity, statistic=stat, R=10000) 
+```
+
+* first I define the statistic I want to compute in every bootstrap sample (i.e, `stat`). It is simply a function were I sample pairs of rows from my dataset and the compute $\widetilde{K}$. 
+* then I use the `boot()` function that actually performs the resampling; where I specify the dataset I want to sample from (i.e., `data=bigcity`), the statistic I want to compute in each sample (i.e.,`statistic=stat`) and how many bootstrap samples I want (i.e., `R=10000`)
+
+```{r}
+hist(boot_p$t, breaks=200, probability = T, xlab="K_tilde", main="Histogram of 10000 nonparametric bootstrap replications of K_tilde,")
+```
+
+The figure shows the histogram of the sampled $\widetilde{K}$, under the null hypothesis. We see that the distribution is centered around 1, as we expected.
+
+Next, I compute the Monte Carlo p-value as 
+$$p=\frac{1+ \#(|\theta^*| > |\widehat{\theta}|)}{R+1}$$
+where $\theta^*$ is the bootstrap statistic.
+
+```{r}
+(p <- (1+sum(abs(boot_p$t) > abs(theta_hat)))/(10000+1))
+```
+
+Since $p<0.005$ we reject the null hypothesis at 5\% significance level and we conclude that there is a difference between the average population in the 49 cities between 1920 and 1930. Considering the higher number of people in 1930, we can deduce that the population has grown within the 10-year period. An informative approach would be to construct a CI for $\theta$. 
+
+```{r, warning=F}
+#construct confidence intervals for the parameter estimate
+meanratio <- function(data, indices){
+  
+  d <- data[indices, ]
+  k <- (mean(d$x)/mean(d$u)) 
+  
+  return(k)
+}
+
+boot.out <- boot(bigcity, meanratio, 10000)
+boot.ci(boot.out)
+```
+
+* the code changes slightly because now I don't need to resample under the null hypothesis. Hence, $\widetilde{K}$ is just the ratio of the two means, $\bar{x}$ and $\bar{u}$. 
+
+We get 4 different kind of intervals. For their explanation I refer to @efron1994introduction and @diciccio1996bootstrap.
+
+All of them lead us to the same conclusion as before. Since the CI does not include one we can say that there is a difference between the two measurements. Moreover, considering that the CI is above one it allows us conclude that there has been a statistically significant growth in the population between 1920 and 1930.
+
+
+As mentioned above the estimator we used is biased [@van2000mean]. The bootstrap estimate of bias and SE are
+
+```{r}
+boot_p
+```
+
+The ratio of the estimated bias to standard error, $\widehat{bias}_{10000}/\tilde{SE}_{10000}=0.03$ is small, indicating that in this case we do not have to worry about the bias. According to @efron1994introduction a bias of less than .25 standard errors can be ignored. That is because if bias/SE $\leq{.25}$, then the root mean square error is no more than about 3.1% greater than SE.
+
+Furthermore, to our convenience @van2000mean provide a closed form expression for the bias of $\widehat{\theta}$
+
+$$bias=\frac{1}{n}\Big(var(u)\frac{\mu_x}{\mu_u^3} - \frac{cov(x,u)}{\mu_u^2}\Big)$$
+
+Using this formula we calculate $bias= 0.0016$. Notice $bias \simeq\widehat{bias}_{1000}$, an indication that our bootstrap algorithm approximated very close the theoretical result. The same is valid for the standard error: $\widehat{SE}= 0.034$ comparing to $\tilde{SE}_{10000}= 0.035$.
+
+To conclude, the bootstrap approximated well the theoretical result and thus we can infer that there has been growth in the population of the US between 1920 and 1930. 
+
+### Another way to test the same hypothesis
+
+Under the null hypothesis (no growth) the mean of the difference is expected to be zero. Let 
+$Z_i= X_i-U_i$, where $i$ refers to the $i^{th}$ city. Then 
+$$E(Z_i)=E(X_i-U_i)=0.$$
+
+Hence I define, $\widetilde{Z_i}=Z_i - E(Z) + E(Z_i)$
+
+```{r}
+z <- bigcity$x-bigcity$u
+mean(z)
+(z.tilde <- z - mean(z))
+mean(z.tilde)
+```
+
+Now we can generate bootstrap sample under the null hypothesis
+
+$$H_0:\mu_Z=0,$$
+$$H_a:\mu_Z \neq 0$$
+
+```{r}
+R = 10000
+t.boot<-c(1:R)
+
+for(b in 1:R){
+  z.b <- sample(z.tilde, size=length(z), replace=TRUE)
+  t.boot[b] <- t.test(z.b,mu=0)$statistic
+}
+
+```
+
+* I don't use the `boot()` function even though I could. I write my own for-loop. 
+* `z.b` samples 49 observations with replacement from `z.tilde` at each iteration (in total R=10000 iterations). 
+* `t.boot` calculates the following t-statistic at each iteration
+$$t=\frac{\overline{z.b}-0}{SE(\overline{z.b})},$$
+
+where $\overline{z.b}$ is the mean of `z.b` at each iteration. 
+
+I plot the sampled $t_s$. We see that the distribution is centered around 0, as we expected.
+
+```{r}
+hist(t.boot, breaks=200, probability = T, xlab="t", main="Histogram of 10000 nonparametric bootstrap replications
+     of t-stat,")
+```
+
+The p-value is 
+```{r}
+(Pmc <- (1+sum(abs(t.boot) > abs(mean(z))))/(R+1)) 
+```
+
+As expected, it is exactly the same as before. 
+
+##References
