@@ -1,3 +1,4 @@
+https://travis-ci.org/solonkarapa/Bootstrap-Ratio-Statistic.svg?branch=master
 # Bootstrap-Ratio-Statistic
 
 - I use bootstrap to test a hypothesis about a ratio statistic. 
