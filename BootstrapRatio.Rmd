@@ -10,7 +10,7 @@ subtitle: "using the boot package in R"
 bibliography: bootRatio.bib
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -68,14 +68,14 @@ stat <- function(data, indices){
 }
 
 set.seed(1235) # seed for the RNG to ensure that you get exactly the same results as here
-boot_p <- boot(data=bigcity, statistic=stat, R=10000) 
+boot_p <- boot(data = bigcity, statistic = stat, R = 10000) 
 ```
 
 * first I define the statistic I want to compute in every bootstrap sample (i.e, `stat`). It is simply a function were I sample pairs of rows from my dataset and the compute $\widetilde{K}$. 
 * then I use the `boot()` function that actually performs the resampling; where I specify the dataset I want to sample from (i.e., `data=bigcity`), the statistic I want to compute in each sample (i.e.,`statistic=stat`) and how many bootstrap samples I want (i.e., `R=10000`)
 
 ```{r}
-hist(boot_p$t, breaks=200, probability = T, xlab="K_tilde", main="Histogram of 10000 nonparametric bootstrap replications of K_tilde,")
+hist(boot_p$t, breaks = 200, probability = T, xlab = "K_tilde", main = "Histogram of 10000 nonparametric bootstrap replications of K_tilde")
 ```
 
 The figure shows the histogram of the sampled $\widetilde{K}$, under the null hypothesis. We see that the distribution is centered around 1, as we expected.
@@ -152,8 +152,8 @@ R = 10000
 t.boot<-c(1:R)
 
 for(b in 1:R){
-  z.b <- sample(z.tilde, size=length(z), replace=TRUE)
-  t.boot[b] <- t.test(z.b,mu=0)$statistic
+  z.b <- sample(z.tilde, size = length(z), replace = TRUE)
+  t.boot[b] <- t.test(z.b, mu = 0)$statistic
 }
 
 ```
@@ -168,8 +168,7 @@ where $\overline{z.b}$ is the mean of `z.b` at each iteration.
 I plot the sampled $t_s$. We see that the distribution is centered around 0, as we expected.
 
 ```{r}
-hist(t.boot, breaks=200, probability = T, xlab="t", main="Histogram of 10000 nonparametric bootstrap replications
-     of t-stat,")
+hist(t.boot, breaks=200, probability = T, xlab = "t", main = "Histogram of 10000 nonparametric bootstrap replications of t-stat")
 ```
 
 The p-value is 
@@ -179,4 +178,4 @@ The p-value is
 
 As expected, it is exactly the same as before. 
 
-##References
+## References
