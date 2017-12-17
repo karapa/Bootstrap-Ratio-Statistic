@@ -3,4 +3,4 @@ cache: packages
 
 
 install:
-  - Rscript -e 'install.packages(c("knitr", "boot"))'
+  - Rscript -e 'install.packages(c("knitr", "boot", "rmarkdown"))'
