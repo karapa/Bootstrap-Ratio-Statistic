@@ -3,9 +3,9 @@ title: "Bootstrapping a Ratio Statistic"
 author: "Solon Karapanagiotis"
 date: "6 August 2016"
 output:
-  pdf_document: default
   html_document:
     highlight: haddock
+  pdf_document: default
 subtitle: using the boot package in R
 bibliography: bootRatio.bib
 ---
