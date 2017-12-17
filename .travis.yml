@@ -1,8 +1,8 @@
-language: R
+language: r
 cache: packages
 
 install:
-  - Rscript -e 'install.packages(c("knitr", "boot", "rmarkdown"))'
+   - Rscript -e 'install.packages(c("knitr", "boot", "rmarkdown"))'
 
 script:
-- make
+   - make
