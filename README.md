@@ -1,5 +1,5 @@
 
-# Bootstrap-Ratio-Statistic
+# Bootstrap-Ratio-Statistic [![Build Status](https://travis-ci.org/solonkarapa/Bootstrap-Ratio-Statistic.svg?branch=master)](https://travis-ci.org/solonkarapa/Bootstrap-Ratio-Statistic)
 
 - I use bootstrap to test a hypothesis about a ratio statistic. 
 - I provide two alternatives to calculate the same hypothesis. 
