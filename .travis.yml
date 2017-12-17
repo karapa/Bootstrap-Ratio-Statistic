@@ -4,5 +4,3 @@ cache: packages
 install:
    - Rscript -e 'install.packages(c("knitr", "boot", "rmarkdown"))'
 
-script:
-   - make
