@@ -11,9 +11,6 @@ install:
    - R -e 'install.packages(c("knitr", "boot"))'
 
 script:
-   - R -e "rmarkdown::render_site()"
-   - tools/pdf_all
-   - tools/headers
-
-after_success:
-   - ./tools/deploy.sh
+  - R -e "rmarkdown::render('BootstrapRatio.Rmd')"
+  
+  
