@@ -6,7 +6,7 @@ output:
   html_document:
     highlight: haddock
   pdf_document: default
-subtitle: using the boot package in R
+subtitle: "using the boot package in R"
 bibliography: bootRatio.bib
 ---
 
